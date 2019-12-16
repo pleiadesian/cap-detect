@@ -7,54 +7,101 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
+# train img amount
+TRAIN_SIZE = 7
+# match threshold
 MIN_MATCH_COUNT = 10
 
-img1 = cv2.imread('query/side.png',0)          # queryImage
-img2 = cv2.imread('train/5.png',0)      # trainImage
+FRONT = 0
+BACK = 1
+SIDE = 2
+NONE = 3
+direct_str = ['FRONT','BACK','SIDE']
+
+# load query images
+img = [[], [], []]
+img[FRONT].append(cv2.imread('query/front.png',0))
+img[FRONT].append(cv2.imread('query/front-1.png', 0))
+img[BACK].append(cv2.imread('query/back.png',0))
+img[SIDE].append(cv2.imread('query/side.png',0))
+img[SIDE].append(cv2.imread('query/side-1.png', 0))
 
 # Initiate SIFT detector
 orb = cv2.ORB_create()
 
 # find the keypoints and descriptors with SIFT
-kp1, des1 = orb.detectAndCompute(img1,None)
-kp2, des2 = orb.detectAndCompute(img2,None)
+kp = [[], [], []]
+des = [[], [], []]
+for direct in range(FRONT, NONE):
+    for img_temp in img[direct]:
+        kp_temp, des_temp = orb.detectAndCompute(img_temp, None)
+        kp[direct].append(kp_temp)
+        des[direct].append(des_temp)
 
+# use FLANN matcher
 FLANN_INDEX_KDTREE = 0
 index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 search_params = dict(checks = 50)
-
 flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-matches = flann.knnMatch(np.asarray(des1,np.float32),np.asarray(des2,np.float32),k=2)
+for i in range(0, TRAIN_SIZE):
+    img_train = cv2.imread('train/'+str(i)+'.png',0)      # trainImage
+    img_train_matched = None
 
-# store all the good matches as per Lowe's ratio test.
-good = []
-for m,n in matches:
-    if m.distance < 0.7*n.distance:
-        good.append(m)
+    kp_train, des_train = orb.detectAndCompute(img_train,None)
 
-if len(good)>MIN_MATCH_COUNT:
-    src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-    dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+    matches = [[], [], []]
+    for direct in range(FRONT, NONE):
+        for des_temp in des[direct]:
+            matches[direct].append(
+                flann.knnMatch(np.asarray(des_temp, np.float32), np.asarray(des_train, np.float32), k=2))
 
-    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-    matchesMask = mask.ravel().tolist()
-
-    h,w = img1.shape
-    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-    dst = cv2.perspectiveTransform(pts,M)
-
-    img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-
-else:
-    print("Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT))
+    # store all the good matches as per Lowe's ratio test.
+    selected = NONE
+    max_match = 0
     matchesMask = None
+    img_selected = None
+    kp_selected = None
+    good_selected = None
+    for direct in range(FRONT, NONE):
+        for img_temp, kp_temp, des_temp, matches_temp in zip(img[direct], kp[direct], des[direct], matches[direct]):
+            good = []
+            for m,n in matches_temp:
+                if m.distance < 0.7*n.distance:
+                    good.append(m)
+            if len(good) > MIN_MATCH_COUNT:
+                src_pts = np.float32([ kp_temp[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+                dst_pts = np.float32([ kp_train[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
-draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
-                   singlePointColor=None,
-                   matchesMask=matchesMask,  # draw only inliers
-                   flags=2)
+                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+                matchesMask = mask.ravel().tolist()
 
-img3 = cv2.drawMatches(img1, kp1, img2, kp2, good, None, **draw_params)
+                # no matches is inlier, skip this train image
+                if M is None :
+                    continue
 
-plt.imshow(img3, 'gray'), plt.show()
+                match_sum = np.sum(matchesMask)
+                if match_sum > max_match:
+                    max_match = match_sum
+                    selected = direct
+
+                    h,w = img_temp.shape
+                    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+                    dst = cv2.perspectiveTransform(pts,M)
+
+                    img_selected = img_temp
+                    kp_selected = kp_temp
+                    good_selected = good
+                    img_train_matched = cv2.polylines(img_train,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+
+    if selected == NONE:
+        print("Not enough matches are found")
+        matchesMask = None
+    else:
+        print("%d.png is %s" % (i, direct_str[selected]))
+        draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
+                           singlePointColor=None,
+                           matchesMask=matchesMask,  # draw only inliers
+                           flags=2)
+        img_output = cv2.drawMatches(img_selected, kp_selected, img_train_matched, kp_train, good_selected, None, **draw_params)
+        plt.imshow(img_output, 'gray'), plt.show()
