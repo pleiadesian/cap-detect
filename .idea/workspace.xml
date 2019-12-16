@@ -2,20 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6f788da1-6b3e-4e9e-8cd0-7a8492c62e08" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/doc/note.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/计算机视觉大作业.docx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/black.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/cap.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/car.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/car_in_scene.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/findcap.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/findcar.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/green.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/lena.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/red.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/reda.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sift.py" beforeDir="false" afterPath="$PROJECT_DIR$/sift.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/7.png" beforeDir="false" afterPath="$PROJECT_DIR$/train/0.png" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,11 +16,20 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sift.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="196">
-              <caret line="68" selection-start-line="68" selection-end-line="68" />
+            <state relative-caret-position="477">
+              <caret line="111" column="39" lean-forward="true" selection-start-line="111" selection-start-column="39" selection-end-line="111" selection-end-column="39" />
               <folding>
-                <element signature="e#73#91#0" expanded="true" />
+                <element signature="e#73#79#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/color.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
             </state>
           </provider>
         </entry>
@@ -57,6 +54,7 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/color.py" />
         <option value="$PROJECT_DIR$/sift.py" />
       </list>
     </option>
@@ -160,8 +158,8 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32959184" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.4" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32959184" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32959184" />
@@ -175,25 +173,6 @@
     </layout>
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sift.py</url>
-          <line>48</line>
-          <option name="timeStamp" value="11" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sift.py</url>
-          <line>72</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sift.py</url>
-          <line>68</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="matchesMask" />
@@ -224,12 +203,22 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/query/side-1.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/color.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sift.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="68" selection-start-line="68" selection-end-line="68" />
+        <state relative-caret-position="477">
+          <caret line="111" column="39" lean-forward="true" selection-start-line="111" selection-start-column="39" selection-end-line="111" selection-end-column="39" />
           <folding>
-            <element signature="e#73#91#0" expanded="true" />
+            <element signature="e#73#79#0" expanded="true" />
           </folding>
         </state>
       </provider>
