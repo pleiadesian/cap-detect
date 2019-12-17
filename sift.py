@@ -6,26 +6,39 @@
 import os
 import numpy as np
 import cv2
+import hog
 from matplotlib import pyplot as plt
 
+HOG_APP = 0
+
 # match threshold
-MIN_MATCH_COUNT = 10
+MIN_MATCH_COUNT = 10  # default 10
+RATIO_TEST_DISTANCE = 0.7  # default 0.7
 
 FRONT = 0
 BACK = 1
 SIDE = 2
 NONE = 3
 direct_str = ['FRONT','BACK','SIDE']
+direct_lower_str = ['front', 'back', 'side']
 
 # load query images
+imgname = [[],[],[]]
 img = [[], [], []]
-img[FRONT].append(cv2.imread('query/front.png',0))
-img[FRONT].append(cv2.imread('query/front-1.png', 0))
-img[FRONT].append(cv2.imread('query/front-2.png', 0))
-img[BACK].append(cv2.imread('query/back.png',0))
-img[SIDE].append(cv2.imread('query/side.png',0))
-img[SIDE].append(cv2.imread('query/side-1.png', 0))
-img[SIDE].append(cv2.imread('query/side-2.png', 0))
+img_hog = [[], [], []]
+for direct in range(FRONT, NONE):
+    for base_path, folder_list, file_list in os.walk('query/'+direct_lower_str[direct]):
+        for file_name in file_list:
+            filename = os.path.join(base_path, file_name)
+            if filename[-4:] != '.png' and filename[-4:] != '.jpg':
+                continue
+            imgname[direct].append(filename)
+            img[direct].append(cv2.resize(cv2.imread(filename,0), (512, 512)))
+            img_hog[direct].append(cv2.resize(cv2.imread(filename), (512, 512)))
+
+# fd = hog.hog_des(img_hog)
+if HOG_APP == 1:
+    fd = hog.load_fd()
 
 # Initiate SIFT detector
 orb = cv2.ORB_create()
@@ -34,8 +47,10 @@ orb = cv2.ORB_create()
 kp = [[], [], []]
 des = [[], [], []]
 for direct in range(FRONT, NONE):
-    for img_temp in img[direct]:
+    for img_temp, img_name in zip(img[direct], imgname[direct]):
         kp_temp, des_temp = orb.detectAndCompute(img_temp, None)
+        if des_temp is None:
+            print(img_name + ": SIFT cannot detect keypoints and descriptor")
         kp[direct].append(kp_temp)
         des[direct].append(des_temp)
 
@@ -51,13 +66,19 @@ for base_path, folder_list, file_list in os.walk('train'):
         filename = os.path.join(base_path,file_name)
         if filename[-4:] != '.png' and filename[-4:] != '.jpg':
             continue
-        img_train = cv2.imread(filename, 0)
-        # img_train = cv2.imread('train/2.png',0)
+        img_train = cv2.resize(cv2.imread(filename,0),(512,512))
 
         img_train_matched = None
-
         kp_train, des_train = orb.detectAndCompute(img_train,None)
-
+        if des_train is None:
+            print(filename + ": SIFT cannot detect keypoints and descriptor")
+            if HOG_APP == 1:
+                # fallback to HOG matching
+                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train)
+                print("%s is %s (HOG)" % (filename, direct_str[selected]))
+                img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
+                plt.imshow(img_output, 'gray'), plt.show()
+            continue
         matches = [[], [], []]
         for direct in range(FRONT, NONE):
             for des_temp in des[direct]:
@@ -76,7 +97,7 @@ for base_path, folder_list, file_list in os.walk('train'):
             for img_temp, kp_temp, des_temp, matches_temp in zip(img[direct], kp[direct], des[direct], matches[direct]):
                 good = []
                 for m,n in matches_temp:
-                    if m.distance < 0.7*n.distance:
+                    if m.distance < RATIO_TEST_DISTANCE * n.distance:
                         good.append(m)
 
                 if len(good) > MIN_MATCH_COUNT:
@@ -106,10 +127,17 @@ for base_path, folder_list, file_list in os.walk('train'):
                         img_train_matched = cv2.polylines(img_train,[np.int32(dst)],True,255,3, cv2.LINE_AA)
 
         if selected == NONE:
-            print("Not enough matches are found")
+            print("%s: Not enough matches are found by SIFT" % filename)
             mask_selected = None
+
+            if HOG_APP == 1:
+                # fallback to HOG matching
+                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train)
+                print("%s is %s (HOG)" % (filename, direct_str[selected]))
+                img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
+                plt.imshow(img_output, 'gray'), plt.show()
         else:
-            print("%s is %s" % (filename, direct_str[selected]))
+            print("%s is %s (SIFT)" % (filename, direct_str[selected]))
             draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
                                singlePointColor=None,
                                matchesMask=mask_selected,  # draw only inliers
