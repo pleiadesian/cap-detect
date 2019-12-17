@@ -21,9 +21,11 @@ direct_str = ['FRONT','BACK','SIDE']
 img = [[], [], []]
 img[FRONT].append(cv2.imread('query/front.png',0))
 img[FRONT].append(cv2.imread('query/front-1.png', 0))
+img[FRONT].append(cv2.imread('query/front-2.png', 0))
 img[BACK].append(cv2.imread('query/back.png',0))
 img[SIDE].append(cv2.imread('query/side.png',0))
 img[SIDE].append(cv2.imread('query/side-1.png', 0))
+img[SIDE].append(cv2.imread('query/side-2.png', 0))
 
 # Initiate SIFT detector
 orb = cv2.ORB_create()
@@ -46,9 +48,12 @@ flann = cv2.FlannBasedMatcher(index_params, search_params)
 # for i in range(0, TRAIN_SIZE):
 for base_path, folder_list, file_list in os.walk('train'):
     for file_name in file_list:
-        # img_train = cv2.imread('train/'+str(i)+'.png',0)      # trainImage
         filename = os.path.join(base_path,file_name)
+        if filename[-4:] != '.png' and filename[-4:] != '.jpg':
+            continue
         img_train = cv2.imread(filename, 0)
+        # img_train = cv2.imread('train/2.png',0)
+
         img_train_matched = None
 
         kp_train, des_train = orb.detectAndCompute(img_train,None)
@@ -66,23 +71,25 @@ for base_path, folder_list, file_list in os.walk('train'):
         img_selected = None
         kp_selected = None
         good_selected = None
+        mask_selected = None
         for direct in range(FRONT, NONE):
             for img_temp, kp_temp, des_temp, matches_temp in zip(img[direct], kp[direct], des[direct], matches[direct]):
                 good = []
                 for m,n in matches_temp:
                     if m.distance < 0.7*n.distance:
                         good.append(m)
+
                 if len(good) > MIN_MATCH_COUNT:
                     src_pts = np.float32([ kp_temp[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
                     dst_pts = np.float32([ kp_train[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
                     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-                    matchesMask = mask.ravel().tolist()
 
                     # no matches is inlier, skip this train image
                     if M is None :
                         continue
 
+                    matchesMask = mask.ravel().tolist()
                     match_sum = np.sum(matchesMask)
                     if match_sum > max_match:
                         max_match = match_sum
@@ -92,6 +99,7 @@ for base_path, folder_list, file_list in os.walk('train'):
                         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
                         dst = cv2.perspectiveTransform(pts,M)
 
+                        mask_selected = matchesMask
                         img_selected = img_temp
                         kp_selected = kp_temp
                         good_selected = good
@@ -99,12 +107,12 @@ for base_path, folder_list, file_list in os.walk('train'):
 
         if selected == NONE:
             print("Not enough matches are found")
-            matchesMask = None
+            mask_selected = None
         else:
             print("%s is %s" % (filename, direct_str[selected]))
             draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
                                singlePointColor=None,
-                               matchesMask=matchesMask,  # draw only inliers
+                               matchesMask=mask_selected,  # draw only inliers
                                flags=2)
             img_output = cv2.drawMatches(img_selected, kp_selected, img_train_matched, kp_train, good_selected, None, **draw_params)
             plt.imshow(img_output, 'gray'), plt.show()
