@@ -73,9 +73,7 @@ def hog_match(fd, img_query, img_train):
         op_min = None
         for fd_query, query in zip(fd[direct], img_query[direct]):
             op = np.linalg.norm(fd_query-fd_train)
-            if op_min is None:
-                op_min = op
-            elif op < op_min:
+            if op_min is None or op < op_min:
                 op_min = op
                 img_selected[direct] = query
             softmax[direct].append(np.exp(op))

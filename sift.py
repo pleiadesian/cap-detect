@@ -9,10 +9,10 @@ import cv2
 import hog
 from matplotlib import pyplot as plt
 
-HOG_APP = 0
+HOG_APP = 1
 
 # match threshold
-MIN_MATCH_COUNT = 10  # default 10
+MIN_MATCH_COUNT = 9  # default 10
 RATIO_TEST_DISTANCE = 0.7  # default 0.7
 
 FRONT = 0
@@ -33,12 +33,13 @@ for direct in range(FRONT, NONE):
             if filename[-4:] != '.png' and filename[-4:] != '.jpg':
                 continue
             imgname[direct].append(filename)
-            img[direct].append(cv2.resize(cv2.imread(filename,0), (512, 512)))
-            img_hog[direct].append(cv2.resize(cv2.imread(filename), (512, 512)))
+            # img[direct].append(cv2.resize(cv2.imread(filename,0), (512, 512)))
+            img[direct].append(cv2.imread(filename,0))
+            img_hog[direct].append(cv2.imread(filename))
 
+# if HOG_APP == 1:
 # fd = hog.hog_des(img_hog)
-if HOG_APP == 1:
-    fd = hog.load_fd()
+fd = hog.load_fd()
 
 # Initiate SIFT detector
 orb = cv2.ORB_create()
@@ -66,7 +67,9 @@ for base_path, folder_list, file_list in os.walk('train'):
         filename = os.path.join(base_path,file_name)
         if filename[-4:] != '.png' and filename[-4:] != '.jpg':
             continue
-        img_train = cv2.resize(cv2.imread(filename,0),(512,512))
+        # img_train = cv2.resize(cv2.imread(filename,0),(512,512))
+        img_train = cv2.imread(filename, 0)
+        img_train_hog = cv2.imread(filename)
 
         img_train_matched = None
         kp_train, des_train = orb.detectAndCompute(img_train,None)
@@ -74,7 +77,7 @@ for base_path, folder_list, file_list in os.walk('train'):
             print(filename + ": SIFT cannot detect keypoints and descriptor")
             if HOG_APP == 1:
                 # fallback to HOG matching
-                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train)
+                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train_hog)
                 print("%s is %s (HOG)" % (filename, direct_str[selected]))
                 img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
                 plt.imshow(img_output, 'gray'), plt.show()
@@ -132,7 +135,7 @@ for base_path, folder_list, file_list in os.walk('train'):
 
             if HOG_APP == 1:
                 # fallback to HOG matching
-                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train)
+                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train_hog)
                 print("%s is %s (HOG)" % (filename, direct_str[selected]))
                 img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
                 plt.imshow(img_output, 'gray'), plt.show()
@@ -142,5 +145,23 @@ for base_path, folder_list, file_list in os.walk('train'):
                                singlePointColor=None,
                                matchesMask=mask_selected,  # draw only inliers
                                flags=2)
+
+            # get 3 keypoints, do linear transformation
+            # kps_src = []
+            # kps_dst = []
+            # for mask, good_match in zip(mask_selected, good_selected):
+            #     if mask == 1:
+            #         kps_src.append(kp_selected[good_match.queryIdx])
+            #         kps_dst.append(kp_train[good_match.trainIdx])
+            #         if len(kps_src) >= 3:
+            #             break
+            #
+            # pts_src = np.float32([kps_src[0].pt, kps_src[1].pt, kps_src[2].pt])
+            # pts_dst = np.float32([kps_dst[0].pt, kps_dst[1].pt, kps_dst[2].pt])
+            # M = cv2.getAffineTransform(pts_src, pts_dst)
+            # dst = cv2.warpAffine(img_selected, M, (img_selected.shape[0], img_selected.shape[1]))
+            # cv2.imshow('image', dst)
+            # plt.imshow(dst, 'warp'), plt.show()
+
             img_output = cv2.drawMatches(img_selected, kp_selected, img_train_matched, kp_train, good_selected, None, **draw_params)
             plt.imshow(img_output, 'gray'), plt.show()
