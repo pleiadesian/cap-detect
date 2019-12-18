@@ -52,6 +52,7 @@ for direct in range(FRONT, NONE):
         kp_temp, des_temp = orb.detectAndCompute(img_temp, None)
         if des_temp is None:
             print(img_name + ": SIFT cannot detect keypoints and descriptor")
+            exit()
         kp[direct].append(kp_temp)
         des[direct].append(des_temp)
 
@@ -85,6 +86,9 @@ for base_path, folder_list, file_list in os.walk('train'):
         matches = [[], [], []]
         for direct in range(FRONT, NONE):
             for des_temp in des[direct]:
+                li = flann.knnMatch(np.asarray(des_temp, np.float32), np.asarray(des_train, np.float32), k=2)
+                if len(li) == 1:
+                    print("error")
                 matches[direct].append(
                     flann.knnMatch(np.asarray(des_temp, np.float32), np.asarray(des_train, np.float32), k=2))
 
