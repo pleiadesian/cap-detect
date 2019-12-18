@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 HOG_APP = 1
 
 # match threshold
-MIN_MATCH_COUNT = 9  # default 10
+MIN_MATCH_COUNT = 10  # default 10
 RATIO_TEST_DISTANCE = 0.7  # default 0.7
 
 FRONT = 0
@@ -34,7 +34,7 @@ for direct in range(FRONT, NONE):
                 continue
             imgname[direct].append(filename)
             # img[direct].append(cv2.resize(cv2.imread(filename,0), (512, 512)))
-            img[direct].append(cv2.imread(filename,0))
+            img[direct].append(cv2.imread(filename,cv2.IMREAD_GRAYSCALE))
             img_hog[direct].append(cv2.imread(filename))
 
 # if HOG_APP == 1:
@@ -69,7 +69,7 @@ for base_path, folder_list, file_list in os.walk('train'):
         if filename[-4:] != '.png' and filename[-4:] != '.jpg':
             continue
         # img_train = cv2.resize(cv2.imread(filename,0),(512,512))
-        img_train = cv2.imread(filename, 0)
+        img_train = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
         img_train_hog = cv2.imread(filename)
 
         img_train_matched = None
