@@ -3,26 +3,34 @@
 @ Author:   wzl
 @ Datetime: 2019-12-17 12:33
 """
-import numpy
+import cv2
+import numpy as np
 
-# Procrustes analysis
-def transformation_from_points(points1, points2):
-    points1 = points1.astype(numpy.float64)
-    points2 = points2.astype(numpy.float64)
+GAUSSIAN_KERNEL_SIZE = 9 # default 3
+BEST_POINT = 100 # default 25
 
-    c1 = numpy.mean(points1, axis=0)
-    c2 = numpy.mean(points2, axis=0)
-    points1 -= c1
-    points2 -= c2
+def rotate(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_gaussian = cv2.GaussianBlur(gray, (GAUSSIAN_KERNEL_SIZE, GAUSSIAN_KERNEL_SIZE), 0)
+    corners = cv2.goodFeaturesToTrack(img_gaussian, BEST_POINT, 0.01, 10)
+    corners = np.int0(corners)
+    for i in corners:
+        x, y = i.ravel()
+        cv2.circle(img, (x, y), 3, 255, -1)
+    # cv2.imshow("img", img)
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
 
-    s1 = numpy.std(points1)
-    s2 = numpy.std(points2)
-    points1 /= s1
-    points2 /= s2
+    # img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img_temp = img_gray.astype(np.float32)
+    # img_gaussian = cv2.GaussianBlur(img_temp, (GAUSSIAN_KERNEL_SIZE, GAUSSIAN_KERNEL_SIZE), 0)
+    # img_corner = cv2.cornerHarris(img_gaussian, 2, 3, 0.04)
+    # img_dilate = cv2.dilate(img_corner, None)
+    # img[img_dilate > 0.01 * img_dilate.max()] = [0, 0, 255]
+    return img
 
-    U, S, Vt = numpy.linalg.svd(points1.T * points2)
-    R = (U * Vt).T
-
-    return numpy.vstack([numpy.hstack(((s2 / s1) * R,
-                                       c2.T - (s2 / s1) * R * c1.T)),
-                         numpy.matrix([0., 0., 1.])])
+image = cv2.imread('train/屏幕快照 2019-12-19 下午4.55.54.png')
+imgfinal = rotate(image)
+cv2.imshow("final", imgfinal)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

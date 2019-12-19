@@ -7,7 +7,6 @@ import cv2
 import json
 import matplotlib.pyplot as plt
 import numpy as np
-
 from labelme import utils
 
 CANNY_LOWER_THRESHOLD = 20 # default 50

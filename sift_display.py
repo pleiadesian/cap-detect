@@ -73,16 +73,16 @@ for base_path, folder_list, file_list in os.walk('train'):
 
         img_train_matched = None
         kp_train, des_train = orb.detectAndCompute(img_train,None)
-        if des_train is None:
+        if des_train is None or len(des_train) < 2:
             print(filename + ": SIFT cannot detect keypoints and descriptor")
             if HOG_APP == 1:
                 # fallback to HOG matching
                 selected, img_selected, img_selected_name, softmax = hog.hog_match(fd, img_hog, imgname, img_train_hog)
                 print("%s is %s (HOG)" % (filename, direct_str[selected]))
-                img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0])+'.json')
+                # img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0])+'.json')
                 img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
                 plt.imshow(img_output, 'gray'), plt.show()
-                continue
+            continue
         matches = [[], [], []]
         for direct in range(FRONT, NONE):
             for des_temp in des[direct]:
@@ -143,7 +143,7 @@ for base_path, folder_list, file_list in os.walk('train'):
                 # fallback to HOG matching
                 selected, img_selected, img_selected_name, softmax = hog.hog_match(fd, img_hog, imgname, img_train_hog)
                 print("%s is %s (HOG)" % (filename, direct_str[selected]))
-                img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0]) + '.json')
+                # img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0]) + '.json')
                 img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
                 plt.imshow(img_output, 'gray'), plt.show()
         else:
@@ -169,6 +169,7 @@ for base_path, folder_list, file_list in os.walk('train'):
             # dst = cv2.warpAffine(img_selected, M, (img_selected.shape[0], img_selected.shape[1]))
             # cv2.imshow('image', dst)
             # plt.imshow(dst, 'warp'), plt.show()
-            img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0]) + '.json')
+
+            # img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0]) + '.json')
             img_output = cv2.drawMatches(img_selected, kp_selected, img_train_matched, kp_train, good_selected, None, **draw_params)
             plt.imshow(img_output, 'gray'), plt.show()

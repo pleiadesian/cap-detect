@@ -62,6 +62,7 @@ def sift_match(input_image, query_img, query_img_hog, query_img_name, kp, des):
     :param input_image
     :param query_img
     :param query_img_hog
+    :param query_img_name
     :param kp
     :param des
     :return: bottle cap position(FRONT=0, BACK=1, SIDE=2), mask for coloring, origin point on mask
