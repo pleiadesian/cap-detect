@@ -53,5 +53,5 @@ def colored_mask(img):
 #         filename = os.path.join(base_path,file_name)
 #         if filename[-4:] != '.png' and filename[-4:] != '.jpg':
 #             continue
-img_train = cv2.imread('train/屏幕快照 2019-12-19 下午1.17.34.png', cv2.IMREAD_GRAYSCALE)
-colored_mask(img_train)
+# img_train = cv2.imread('train/屏幕快照 2019-12-19 下午1.17.34.png', cv2.IMREAD_GRAYSCALE)
+# colored_mask(img_train)

@@ -57,12 +57,13 @@ def load_fd():
             filename = './hog/' + direct_lower_str[direct] + str(i) + '.txt'
     return fd
 
-def hog_match(fd, img_query, img_train):
+def hog_match(fd, img_query, img_query_name, img_train):
     """
     :param fd: HOG descriptor lists
     :param img_query: query image lists
+    :param img_query_name: query image name lists
     :param img_train: target image
-    :return: image type, image matched, softmax list
+    :return: image type, image matched, matched image json, softmax list
     """
     train_temp = cv2.resize(img_train, (512, 512))
     fd_train, hog_train = hog(train_temp, orientations=8, pixels_per_cell=(4, 4),
@@ -71,11 +72,11 @@ def hog_match(fd, img_query, img_train):
     img_selected = [None, None, None]
     for direct in range(FRONT, NONE):
         op_min = None
-        for fd_query, query in zip(fd[direct], img_query[direct]):
+        for fd_query, query, filename in zip(fd[direct], img_query[direct], img_query_name[direct]):
             op = np.linalg.norm(fd_query-fd_train)
             if op_min is None or op < op_min:
                 op_min = op
-                img_selected[direct] = query
+                img_selected[direct] = (query, filename)
             softmax[direct].append(np.exp(op))
     softsum = np.sum(softmax[FRONT])+np.sum(softmax[BACK])+np.sum(softmax[SIDE])
     for direct in range(FRONT, NONE):
@@ -88,5 +89,5 @@ def hog_match(fd, img_query, img_train):
             min_softmax =min(softmax[direct])
             img_type = direct
             img_final_selected = img_selected[direct]
-    return img_type, img_final_selected, softmax
+    return img_type, img_final_selected[0], img_final_selected[1], softmax
 

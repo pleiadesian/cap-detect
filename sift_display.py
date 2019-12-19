@@ -7,7 +7,7 @@ import os
 import numpy as np
 import cv2
 import hog
-import fillflood
+import color
 from matplotlib import pyplot as plt
 
 HOG_APP = 1
@@ -77,9 +77,9 @@ for base_path, folder_list, file_list in os.walk('train'):
             print(filename + ": SIFT cannot detect keypoints and descriptor")
             if HOG_APP == 1:
                 # fallback to HOG matching
-                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train_hog)
+                selected, img_selected, img_selected_name, softmax = hog.hog_match(fd, img_hog, imgname, img_train_hog)
                 print("%s is %s (HOG)" % (filename, direct_str[selected]))
-                img_mask, origin_point = fillflood.colored_mask(img_selected)
+                img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0])+'.json')
                 img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
                 plt.imshow(img_output, 'gray'), plt.show()
                 continue
@@ -100,8 +100,9 @@ for base_path, folder_list, file_list in os.walk('train'):
         kp_selected = None
         good_selected = None
         mask_selected = None
+        img_selected_name = None
         for direct in range(FRONT, NONE):
-            for img_temp, kp_temp, des_temp, matches_temp in zip(img[direct], kp[direct], des[direct], matches[direct]):
+            for img_temp, img_temp_name, kp_temp, des_temp, matches_temp in zip(img[direct], imgname[direct], kp[direct], des[direct], matches[direct]):
                 good = []
                 for m,n in matches_temp:
                     if m.distance < RATIO_TEST_DISTANCE * n.distance:
@@ -129,6 +130,7 @@ for base_path, folder_list, file_list in os.walk('train'):
 
                         mask_selected = matchesMask
                         img_selected = img_temp
+                        img_selected_name = img_temp_name
                         kp_selected = kp_temp
                         good_selected = good
                         img_train_matched = cv2.polylines(img_train,[np.int32(dst)],True,255,3, cv2.LINE_AA)
@@ -139,8 +141,9 @@ for base_path, folder_list, file_list in os.walk('train'):
 
             if HOG_APP == 1:
                 # fallback to HOG matching
-                selected, img_selected, softmax = hog.hog_match(fd, img_hog, img_train_hog)
+                selected, img_selected, img_selected_name, softmax = hog.hog_match(fd, img_hog, imgname, img_train_hog)
                 print("%s is %s (HOG)" % (filename, direct_str[selected]))
+                img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0]) + '.json')
                 img_output = cv2.drawMatches(img_selected, None, img_train, None, None, None, None)
                 plt.imshow(img_output, 'gray'), plt.show()
         else:
@@ -166,6 +169,6 @@ for base_path, folder_list, file_list in os.walk('train'):
             # dst = cv2.warpAffine(img_selected, M, (img_selected.shape[0], img_selected.shape[1]))
             # cv2.imshow('image', dst)
             # plt.imshow(dst, 'warp'), plt.show()
-
+            img_mask, origin_point = color.colored_mask(str(img_selected_name.split('.')[0]) + '.json')
             img_output = cv2.drawMatches(img_selected, kp_selected, img_train_matched, kp_train, good_selected, None, **draw_params)
             plt.imshow(img_output, 'gray'), plt.show()
