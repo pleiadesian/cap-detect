@@ -10,7 +10,8 @@ import hog
 import color
 from matplotlib import pyplot as plt
 
-HOG_APP = 1
+HOG_APP = 0
+REBUILD_HOG = 1
 
 # match threshold
 MIN_MATCH_COUNT = 10  # default 10
@@ -38,9 +39,12 @@ for direct in range(FRONT, NONE):
             img[direct].append(cv2.imread(filename,cv2.IMREAD_GRAYSCALE))
             img_hog[direct].append(cv2.imread(filename))
 
-# if HOG_APP == 1:
-# fd = hog.hog_des(img_hog)
-fd = hog.load_fd()
+fd = None
+if HOG_APP == 1:
+    if REBUILD_HOG == 1:
+        fd = hog.hog_des(img_hog)
+    else:
+        fd = hog.load_fd()
 
 # Initiate SIFT detector
 orb = cv2.ORB_create()
@@ -53,7 +57,14 @@ for direct in range(FRONT, NONE):
         kp_temp, des_temp = orb.detectAndCompute(img_temp, None)
         if des_temp is None:
             print(img_name + ": SIFT cannot detect keypoints and descriptor")
-            exit()
+            kp[direct].append(None)
+            des[direct].append(None)
+            continue
+        if len(kp_temp) < 30:
+            print(img_name + ": SIFT detect too less keypoints - " + str(len(kp_temp)))
+            kp[direct].append(None)
+            des[direct].append(None)
+            continue
         kp[direct].append(kp_temp)
         des[direct].append(des_temp)
 
@@ -86,11 +97,15 @@ for base_path, folder_list, file_list in os.walk('train'):
         matches = [[], [], []]
         for direct in range(FRONT, NONE):
             for des_temp in des[direct]:
-                li = flann.knnMatch(np.asarray(des_temp, np.float32), np.asarray(des_train, np.float32), k=2)
-                if len(li) == 1:
-                    print("error")
-                matches[direct].append(
-                    flann.knnMatch(np.asarray(des_temp, np.float32), np.asarray(des_train, np.float32), k=2))
+                if des_temp is None:
+                    matches[direct].append(None)
+                    continue
+                matched = flann.knnMatch(np.asarray(des_temp, np.float32), np.asarray(des_train, np.float32), k=2)
+                if len(matched) == 1:
+                    print("FLANN match error")
+                    matches[direct].append(None)
+                    continue
+                matches[direct].append(matched)
 
         # store all the good matches as per Lowe's ratio test.
         selected = NONE
@@ -101,8 +116,15 @@ for base_path, folder_list, file_list in os.walk('train'):
         good_selected = None
         mask_selected = None
         img_selected_name = None
+        assert len(img) == len(img_hog) == len(imgname) == len(kp) == len(des) == len(matches)
+        if HOG_APP:
+            assert len(img) == len(fd)
         for direct in range(FRONT, NONE):
             for img_temp, img_temp_name, kp_temp, des_temp, matches_temp in zip(img[direct], imgname[direct], kp[direct], des[direct], matches[direct]):
+                # SIFT cannot detect this query img, skip it
+                if kp_temp is None or des_temp is None or matches_temp is None:
+                    continue
+
                 good = []
                 for m,n in matches_temp:
                     if m.distance < RATIO_TEST_DISTANCE * n.distance:
